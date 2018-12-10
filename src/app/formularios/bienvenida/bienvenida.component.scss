@@ -1,0 +1,104 @@
+
+
+*
+{
+	margin: 0;
+	padding: 0;
+}
+
+.navbar-collapse{
+	text-decoration: none;
+	list-style: none;
+	display: inline-block;
+	width: 100%;
+}
+.navbar-default{
+	background-color: #E6E6E6;
+}
+.logo{
+	width: 10em;
+	float: left;
+    margin-left: 5%;
+    margin-bottom: 3%;
+    margin-top: 3%;
+}
+.titulo{
+	float:right;
+	font-size:30px;
+    display: inline-block;
+    font-weight: bolder;
+    margin-top: 5%;
+    margin-right:20%;
+    color: #33348E;
+   
+}
+
+.btn-one{
+	padding-top: 5%;
+	padding-bottom: 5%;
+	background-color: #EC7000;
+	border-radius: 12PX;
+	border: none;
+	width: 30%;
+	margin-left: 15%;
+	margin-top: 5%;
+	color: #ffff;
+}
+
+.btn-two{
+	padding: 5%;
+	background-color: #EC7000;
+	border-radius: 12px;
+	margin-left: 10%;
+	border: none;
+	margin-top: 5%;
+	color: #ffff;
+	width: 30%;
+}
+
+/*---seccion responsiva--*/
+
+
+
+.logo-2{
+   
+	width: 3em;
+    margin-left: 45%;
+    margin-top: 5%;
+}
+
+.titulo-2{
+	font-size:18px;
+    font-weight: bolder;
+    margin-bottom: 10%;
+    margin-top: 5%;
+    color:#33348E;
+    text-align: center;
+}
+.btn-1{
+	padding-top: 5%;
+	padding-bottom: 5%;
+	margin-bottom: 5%;
+	background-color: #EC7000;
+	border-radius: 12PX;
+	border: none;	
+	margin-top: 5%;
+	color: #ffff;
+}
+
+.btn-2{
+	padding: 5%;
+	background-color: #EC7000;
+	border-radius: 12px;
+	border: none;
+	margin-top: 5%;
+	color: #ffff;
+}
+
+/*---@media---*/
+
+@media (width: 768px){
+	.two{
+		display: none;
+	}
+}
