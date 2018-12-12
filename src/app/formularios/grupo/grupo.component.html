@@ -19,28 +19,30 @@
 
 <!--Popup de confirmación de empresa-->
 <ng-template #empresaconfirmada let-c="close" let-d="dismiss">
-  <div class="modal-header">
-    <h4 class="modal-title" id="modal-basic-title">Segmento Riesgo {{SegmentoRiesgoCliente}}</h4>
-    <button type="button" class="close" aria-label="Close" (click)="d('Cross')">
-      <span aria-hidden="true">&times;</span>
-    </button>
-  </div>
-  <div class="modal-body">
-    <p>Nombre : {{NombreEmpresa}}</p>
-    <p>Rut : {{RutCliente}}</p>
-    <div *ngIf="!consultaSafe">
-      Este cliente no tiene carpeta tributaria por favor dirijase a Safe a traves de este
-      <a href="#">Link</a>
+  <ng-container *ngIf="(JsonPantallaGrupo | json) != '{}'">
+    <div class="modal-header">
+      <h4 class="modal-title" id="modal-basic-title">Segmento Riesgo
+        {{JsonPantallaGrupo.EmpresaPrincipal.CodigoSegmentoRiesgo}}</h4>
+      <button type="button" class="close" aria-label="Close" (click)="d('Cross')">
+        <span aria-hidden="true">&times;</span>
+      </button>
     </div>
-  </div>
-  <div *ngIf="!consultaSafe" class="modal-footer">
-    <button type="button" class="btn btn-outline-dark" (click)="cerrarTemplateSafe()">Cerrar</button>
-  </div>
-  <div *ngIf="consultaSafe" class="modal-footer">
-    <button type="button" class="btn btn-outline-dark" (click)="Continuar()">Continuar</button>
-  </div>
+    <div class="modal-body">
+      <p>Nombre : {{JsonPantallaGrupo.EmpresaPrincipal.Nombre}}</p>
+      <p>Rut : {{RutCliente}}</p>
+      <div *ngIf="!consultaSafe">
+        Este cliente no tiene carpeta tributaria por favor dirijase a Safe a traves de este
+        <a href="#">Link</a>
+      </div>
+    </div>
+    <div *ngIf="!consultaSafe" class="modal-footer">
+      <button type="button" class="btn btn-outline-dark" (click)="cerrarTemplateSafe()">Cerrar</button>
+    </div>
+    <div *ngIf="consultaSafe" class="modal-footer">
+      <button type="button" class="btn btn-outline-dark" (click)="Continuar()">Continuar</button>
+    </div>
 
-
+  </ng-container>
 </ng-template>
 
 <p>
@@ -48,106 +50,119 @@
   <input type="text" #txtJson>
 </p>
 
-<p>
-  Datos Solicitante
-</p>
-<p>
-  Tipo Cliente
-  <select name="" id="" [(ngModel)]="JsonPantallaServices.JsonPantalla[0].TipoCliente">
-    <ng-container *ngFor="let tipo of Tipos_Clientes">
-      <option value="{{tipo.value}}">{{tipo.textview}}</option>
+<ng-container *ngIf="(JsonPantallaGrupo | json) != '{}'">
+
+  <p>
+    Datos Solicitante
+  </p>
+  <p>
+    Tipo Cliente
+    <select name="" id="" [(ngModel)]="JsonPantallaGrupo.CodigoTipoCliente">
+      <ng-container *ngFor="let tipo of Tipos_Clientes">
+        <option value="{{tipo.CodigoRegistro}}">{{tipo.DescripcionCorta}}</option>
+      </ng-container>
+    </select>
+  </p>
+  
+  <p>
+    Rut: {{JsonPantallaGrupo.SolicitudRutCliente}}
+  </p>
+  <p>
+    Razon Social: {{JsonPantallaGrupo.EmpresaPrincipal.Nombre}}
+  </p>
+  <p>
+    Segmento Economico : {{JsonPantallaGrupo.EmpresaPrincipal.CodigoSegmentoNegocio}}
+  </p>
+
+  <ag-grid-angular #GrillaSociosPrincipal 
+  style="width: 700px; height: 500px;" 
+  class="ag-theme-balham" 
+  [rowData]="JsonPantallaGrupo.EmpresaPrincipal.Relacionado" 
+  [enableFilter]="true" 
+  [columnDefs]="ColumnsSociosPrincipal"
+  >
+</ag-grid-angular>
+
+<!--
+  <table>
+    <tr>
+      <th>
+        Eliminar
+      </th>
+      <th>
+        Direcciones
+      </th>
+      <th>
+        Telefono1
+      </th>
+      <th>
+        Telefono2
+      </th>
+    </tr>
+
+    <ng-container *ngFor="let dire of JsonPantallaServices.JsonPantalla[0].Direcciones">
+      <tr *ngIf="dire.Eliminado == '0'">
+        <td>
+          <input type="button" value="X" (click)="delDireccion(dire)" />
+        </td>
+        <td>
+          <input type="text" [(ngModel)]="dire.Direccion" />
+        </td>
+        <td>
+          <input type="text" (keypress)="numberOnly($event)" [(ngModel)]="dire.Telefono1" />
+        </td>
+        <td>
+          <input type="text" (keypress)="numberOnly($event)" [(ngModel)]="dire.Telefono2" />
+        </td>
+      </tr>
     </ng-container>
-  </select>
-</p>
-<p>
-  Rut: {{JsonPantallaServices.JsonPantalla[0].RutCliente}}
-</p>
-<p>
-  Razon Social: {{JsonPantallaServices.JsonPantalla[0].RazonSocial}}
-</p>
-<p>
-  Segmento Economico : {{JsonPantallaServices.JsonPantalla[0].SegmentoEconomico}}
-</p>
+    <ng-container *ngIf="AgregaDireccion">
+      <td>
+        <input type="button" value="ok" (click)="addDireccionConfirma(Direccion.value,Telefono1.value,Telefono2.value)">
+        <input type="button" value="nok" (click)="addDireccionCancelar()">
+      </td>
+      <td>
+        <input type="text" #Direccion name="" id="">
+      </td>
+      <td>
+        <input type="text" #Telefono1 (keypress)="numberOnly($event)" name="" id="">
+      </td>
+      <td>
+        <input type="text" #Telefono2 (keypress)="numberOnly($event)" name="" id="">
+      </td>
 
-<table>
-  <tr>
-    <th>
-      Eliminar
-    </th>
-    <th>
-      Direcciones
-    </th>
-    <th>
-      Telefono1
-    </th>
-    <th>
-      Telefono2
-    </th>
-  </tr>
-
-  <ng-container *ngFor="let dire of JsonPantallaServices.JsonPantalla[0].Direcciones">
-    <tr *ngIf="dire.Eliminado == '0'">
+    </ng-container>
+    <tr>
       <td>
-        <input type="button" value="X" (click)="delDireccion(dire)" />
-      </td>
-      <td>
-        <input type="text" [(ngModel)]="dire.Direccion" />
-      </td>
-      <td>
-        <input type="text" (keypress)="numberOnly($event)" [(ngModel)]="dire.Telefono1" />
-      </td>
-      <td>
-        <input type="text" (keypress)="numberOnly($event)" [(ngModel)]="dire.Telefono2" />
+        <input type="button" value="Agregar Direccion" (click)="addDireccion()">
       </td>
     </tr>
-  </ng-container>
-  <ng-container *ngIf="AgregaDireccion">
-    <td>
-      <input type="button" value="ok" (click)="addDireccionConfirma(Direccion.value,Telefono1.value,Telefono2.value)">
-      <input type="button" value="nok" (click)="addDireccionCancelar()">
-    </td>
-    <td>
-      <input type="text" #Direccion name="" id="">
-    </td>
-    <td>
-      <input type="text" #Telefono1 (keypress)="numberOnly($event)" name="" id="">
-    </td>
-    <td>
-      <input type="text" #Telefono2 (keypress)="numberOnly($event)" name="" id="">
-    </td>
-
-  </ng-container>
-  <tr>
-    <td>
-      <input type="button" value="Agregar Direccion" (click)="addDireccion()">
-    </td>
-  </tr>
-</table>
+  </table>
 
 
 
-<p>
-  Grupo Empresa
-</p>
-<input type="text" [(ngModel)]="JsonPantallaServices.JsonPantalla[0].RazonSocial" size="100">
-<p>
-  Malla Societaria
-</p>
-<table>
-  <tr>
-    <th>
-      Seleccionar
-    </th>
-    <th>
-      Socio
-    </th>
-    <th>
-      Rut
-    </th>
-    <th>
-      % de Participación
-    </th>
-  </tr>
+  <p>
+    Grupo Empresa
+  </p>
+  <input type="text" [(ngModel)]="JsonPantallaServices.JsonPantalla[0].RazonSocial" size="100">
+  <p>
+    Malla Societaria
+  </p>
+  <table>
+    <tr>
+      <th>
+        Seleccionar
+      </th>
+      <th>
+        Socio
+      </th>
+      <th>
+        Rut
+      </th>
+      <th>
+        % de Participación
+      </th>
+    </tr>
 
     <ng-container *ngFor="let data of JsonPantallaServices.JsonPantalla[0].EmpresaPrincipal.Socios">
       <tr *ngIf="data.Eliminado == '0'" [ngClass]="{'Error': data.Error}">
@@ -168,36 +183,120 @@
         </td>
       </tr>
     </ng-container>
-  
-  <ng-container *ngIf="AgregaSocio">
-    <td>
-      <input type="button" value="ok" (click)="addSocioPrincipalConfirma(RutSocioPrincipal,NombreSocioPrincipal,ParticipacionSocioPrincipal)">
-      <input type="button" value="nok" (click)="addSocioPrincipalCancela()">
-    </td>
-    <td>
-      <input type="text" #NombreSocioPrincipal name="" id="">
-    </td>
-    <td>
-      <input type="text" #RutSocioPrincipal name="" id="">
-    </td>
-    <td>
-      <input type="text" #ParticipacionSocioPrincipal name="" id="" (keypress)="numberOnly($event)">
-    </td>
+
+    <ng-container *ngIf="AgregaSocio">
+      <td>
+        <input type="button" value="ok" (click)="addSocioPrincipalConfirma(RutSocioPrincipal,NombreSocioPrincipal,ParticipacionSocioPrincipal)">
+        <input type="button" value="nok" (click)="addSocioPrincipalCancela()">
+      </td>
+      <td>
+        <input type="text" #NombreSocioPrincipal name="" id="">
+      </td>
+      <td>
+        <input type="text" #RutSocioPrincipal name="" id="">
+      </td>
+      <td>
+        <input type="text" #ParticipacionSocioPrincipal name="" id="" (keypress)="numberOnly($event)">
+      </td>
+    </ng-container>
+    <tr>
+      <td>
+        <input type="button" value="Agregar Socio" (click)="addSocioPrincipal()">
+      </td>
+    </tr>
+  </table>
+
+  <p>
+    Datos Empresas Relacionadas
+  </p>
+
+  <ng-container *ngIf="!JsonPantallaServices.JsonPantalla[0].Relacionados.length == 0">
+    <ng-container *ngFor="let empresa of JsonPantallaServices.JsonPantalla[0].Relacionados">
+      <table *ngIf="empresa.Eliminado == 0">
+        <tr>
+          <th>
+            Rut
+          </th>
+          <th>
+            Nombre
+          </th>
+          <th>
+            Participacion
+          </th>
+          <th>
+            Agregar
+          </th>
+        </tr>
+        <tr [ngClass]="{'Error': empresa.Error}">
+          <td>
+            <input type="text" [(ngModel)]="empresa.RutEmpresa" />
+          </td>
+          <td>
+            <input type="text" [(ngModel)]="empresa.RazonSocialEmpresa" />
+          </td>
+          <td>
+            <input type="text" [(ngModel)]="empresa.PorcentajeParticipacion" (keypress)="numberOnly($event)" />
+          </td>
+          <td>
+            <input type="checkbox" name="" id="" [(ngModel)]="empresa.Seleccion" [ngModelOptions]="{standalone: true}" />
+          </td>
+          <td>
+            <input type="button" name="" id="" value="X" (click)="delEmpresaRelacionado(empresa)" />
+          </td>
+        </tr>
+        <tr>
+          <td colspan="5">
+            Socios
+          </td>
+        </tr>
+        <ng-container *ngFor="let socio of empresa.Socios">
+          <tr *ngIf="socio.Eliminado == '0'" [ngClass]="{'Error': socio.Error}">
+            <td>
+              <input type="text" [(ngModel)]="socio.RutSocio" />
+
+            </td>
+            <td>
+              <input type="text" [(ngModel)]="socio.NombreSocio" />
+            </td>
+            <td>
+              <input type="text" [(ngModel)]="socio.PorcentajeSocio" (keypress)="numberOnly($event)" />
+            </td>
+            <td>
+              <input type="checkbox" name="" id="" [(ngModel)]="socio.Seleccion" [ngModelOptions]="{standalone: true}" />
+            </td>
+            <td>
+              <input type="button" value="X" (click)="delSocioRelacionado(empresa.RutEmpresa,socio)">
+            </td>
+          </tr>
+        </ng-container>
+        <ng-container *ngIf="AgregaSocioEmpresa == empresa.RutEmpresa">
+
+          <td>
+            <input type="text" #RutSocioRelacionado name="" id="">
+          </td>
+          <td>
+            <input type="text" #NombreSocioRelacionado name="" id="">
+          </td>
+          <td>
+            <input type="text" #ParticipacionSocioRelacionado name="" id="" (keypress)="numberOnly($event)">
+          </td>
+          <td>
+            <input type="button" value="ok" (click)="addSocioRelacionadoConfirma(empresa.RutEmpresa, RutSocioRelacionado,NombreSocioRelacionado,ParticipacionSocioRelacionado)">
+            <input type="button" value="nok" (click)="addSocioRelacionadoCancela()">
+          </td>
+        </ng-container>
+        <tr>
+          <td>
+            <input type="button" value="Agregar Socio" (click)="addSocioRelacionado(empresa.RutEmpresa)">
+          </td>
+        </tr>
+      </table>
+    </ng-container>
   </ng-container>
-  <tr>
-    <td>
-      <input type="button" value="Agregar Socio" (click)="addSocioPrincipal()">
-    </td>
-  </tr>
-</table>
 
-<p>
-  Datos Empresas Relacionadas
-</p>
 
-<ng-container *ngIf="!JsonPantallaServices.JsonPantalla[0].Relacionados.length == 0">
-  <ng-container *ngFor="let empresa of JsonPantallaServices.JsonPantalla[0].Relacionados">
-    <table *ngIf="empresa.Eliminado == 0">
+  <ng-container *ngIf="AgregaRelacionado">
+    <table>
       <tr>
         <th>
           Rut
@@ -209,193 +308,114 @@
           Participacion
         </th>
         <th>
-          Agregar
+
         </th>
       </tr>
-      <tr [ngClass]="{'Error': empresa.Error}">
-        <td>
-          <input type="text" [(ngModel)]="empresa.RutEmpresa" />
-        </td>
-        <td>
-          <input type="text" [(ngModel)]="empresa.RazonSocialEmpresa" />
-        </td>
-        <td>
-          <input type="text" [(ngModel)]="empresa.PorcentajeParticipacion" (keypress)="numberOnly($event)" />
-        </td>
-        <td>
-          <input type="checkbox" name="" id="" [(ngModel)]="empresa.Seleccion" [ngModelOptions]="{standalone: true}" />
-        </td>
-        <td>
-          <input type="button" name="" id="" value="X" (click)="delEmpresaRelacionado(empresa)" />
-        </td>
-      </tr>
-      <tr>
-        <td colspan="5">
-          Socios
-        </td>
-      </tr>
-      <ng-container *ngFor="let socio of empresa.Socios">
-        <tr *ngIf="socio.Eliminado == '0'" [ngClass]="{'Error': socio.Error}">
-          <td>
-            <input type="text" [(ngModel)]="socio.RutSocio" />
-
-          </td>
-          <td>
-            <input type="text" [(ngModel)]="socio.NombreSocio" />
-          </td>
-          <td>
-            <input type="text" [(ngModel)]="socio.PorcentajeSocio" (keypress)="numberOnly($event)"/>
-          </td>
-          <td>
-            <input type="checkbox" name="" id="" [(ngModel)]="socio.Seleccion" [ngModelOptions]="{standalone: true}" />
-          </td>
-          <td>
-            <input type="button" value="X" (click)="delSocioRelacionado(empresa.RutEmpresa,socio)">
-          </td>
-        </tr>
-      </ng-container>
-      <ng-container *ngIf="AgregaSocioEmpresa == empresa.RutEmpresa">
-
-        <td>
-          <input type="text" #RutSocioRelacionado name="" id="">
-        </td>
-        <td>
-          <input type="text" #NombreSocioRelacionado name="" id="">
-        </td>
-        <td>
-          <input type="text" #ParticipacionSocioRelacionado name="" id="" (keypress)="numberOnly($event)">
-        </td>
-        <td>
-          <input type="button" value="ok" (click)="addSocioRelacionadoConfirma(empresa.RutEmpresa, RutSocioRelacionado,NombreSocioRelacionado,ParticipacionSocioRelacionado)">
-          <input type="button" value="nok" (click)="addSocioRelacionadoCancela()">
-        </td>
-      </ng-container>
       <tr>
         <td>
-          <input type="button" value="Agregar Socio" (click)="addSocioRelacionado(empresa.RutEmpresa)">
+          <input type="text" #RutRelacionado name="" id="">
+        </td>
+        <td>
+          <input type="text" #NombreRelacionado name="" id="">
+        </td>
+        <td>
+          <input type="text" #ParticipacionRelacionado name="" id="" (keypress)="numberOnly($event)">
+        </td>
+        <td>
+          <input type="button" value="ok" (click)="addEmpresaRelacionadoConfirma(RutRelacionado, NombreRelacionado, ParticipacionRelacionado)">
+          <input type="button" value="nok" (click)="addEmpresaRelacionadoCancelar()">
         </td>
       </tr>
     </table>
   </ng-container>
-</ng-container>
 
 
-<ng-container *ngIf="AgregaRelacionado">
+  <br />
+  <input type="button" value="Agregar Empresa" (click)="addEmpresaRelacionado()">
+
+
+  <p>
+    Avales
+  </p>
   <table>
     <tr>
       <th>
-        Rut
+        Seleccionar
       </th>
       <th>
-        Nombre
+        Solicitante
       </th>
       <th>
-        Participacion
+        Rut Solicitante
       </th>
       <th>
-
+        Razon Social Aval
+      </th>
+      <th>
+        Rut Aval
+      </th>
+      <th>
+        Relacion con Solicitante
       </th>
     </tr>
+
+    <ng-container *ngFor="let aval of JsonPantallaServices.JsonPantalla[0].Avales">
+      <tr *ngIf="aval.Eliminado == '0'" [ngClass]="{'Error': aval.Error}">
+        <td>
+          <input type="checkbox" name="" id="" [(ngModel)]="aval.Seleccion" [ngModelOptions]="{standalone: true}" />
+        </td>
+        <td>
+          <input type="text" [(ngModel)]="aval.NombreSolicitante" />
+        </td>
+        <td>
+          <input type="text" [(ngModel)]="aval.RutSolicitante" />
+        </td>
+        <td>
+          <input type="text" [(ngModel)]="aval.NombreAval" />
+        </td>
+        <td>
+          <input type="text" [(ngModel)]="aval.RutAval" />
+        </td>
+        <td>
+          <input type="text" [(ngModel)]="aval.Relacion" />
+        </td>
+        <td>
+          <input type="button" value="X" (click)="delAval(aval)">
+        </td>
+      </tr>
+    </ng-container>
+    <ng-container *ngIf="AgregaAval">
+      <td>
+        <input type="button" value="ok" (click)="addAvalConfirma(NombreSolicitante,RutSolicitante,NombreAval, RutAval, Relacion)">
+        <input type="button" value="nok" (click)="addAvalCancelar()">
+      </td>
+      <td>
+        <input type="text" #NombreSolicitante name="" id="">
+      </td>
+      <td>
+        <input type="text" #RutSolicitante name="" id="">
+      </td>
+      <td>
+        <input type="text" #NombreAval name="" id="">
+      </td>
+      <td>
+        <input type="text" #RutAval name="" id="">
+      </td>
+      <td>
+        <input type="text" #Relacion name="" id="">
+      </td>
+    </ng-container>
     <tr>
       <td>
-        <input type="text" #RutRelacionado name="" id="">
-      </td>
-      <td>
-        <input type="text" #NombreRelacionado name="" id="">
-      </td>
-      <td>
-        <input type="text" #ParticipacionRelacionado name="" id="" (keypress)="numberOnly($event)">
-      </td>
-      <td>
-        <input type="button" value="ok" (click)="addEmpresaRelacionadoConfirma(RutRelacionado, NombreRelacionado, ParticipacionRelacionado)">
-        <input type="button" value="nok" (click)="addEmpresaRelacionadoCancelar()">
+        <input type="button" value="Agregar Aval" (click)="addAval()">
       </td>
     </tr>
   </table>
+  <br />
+
+  <input type="button" value="Guardar Grupo" (click)="Guardar()">
+
+  -->
 </ng-container>
 
-
-<br/>
-<input type="button" value="Agregar Empresa" (click)="addEmpresaRelacionado()">
-
-
-<p>
-  Avales
-</p>
-<table>
-  <tr>
-    <th>
-      Seleccionar
-    </th>
-    <th>
-      Solicitante
-    </th>
-    <th>
-      Rut Solicitante
-    </th>
-    <th>
-      Razon Social Aval
-    </th>
-    <th>
-      Rut Aval
-    </th>
-    <th>
-      Relacion con Solicitante
-    </th>
-  </tr>
-
-  <ng-container *ngFor="let aval of JsonPantallaServices.JsonPantalla[0].Avales">
-    <tr *ngIf="aval.Eliminado == '0'" [ngClass]="{'Error': aval.Error}">
-      <td>
-        <input type="checkbox" name="" id="" [(ngModel)]="aval.Seleccion" [ngModelOptions]="{standalone: true}" />
-      </td>
-      <td>
-        <input type="text" [(ngModel)]="aval.NombreSolicitante" />
-      </td>
-      <td>
-        <input type="text" [(ngModel)]="aval.RutSolicitante" />
-      </td>
-      <td>
-        <input type="text" [(ngModel)]="aval.NombreAval" />
-      </td>
-      <td>
-        <input type="text" [(ngModel)]="aval.RutAval" />
-      </td>
-      <td>
-        <input type="text" [(ngModel)]="aval.Relacion" />
-      </td>
-      <td>
-        <input type="button" value="X" (click)="delAval(aval)">
-      </td>
-    </tr>
-  </ng-container>
-  <ng-container *ngIf="AgregaAval">
-    <td>
-      <input type="button" value="ok" (click)="addAvalConfirma(NombreSolicitante,RutSolicitante,NombreAval, RutAval, Relacion)">
-      <input type="button" value="nok" (click)="addAvalCancelar()">
-    </td>
-    <td>
-      <input type="text" #NombreSolicitante name="" id="">
-    </td>
-    <td>
-      <input type="text" #RutSolicitante name="" id="">
-    </td>
-    <td>
-      <input type="text" #NombreAval name="" id="">
-    </td>
-    <td>
-      <input type="text" #RutAval name="" id="">
-    </td>
-    <td>
-      <input type="text" #Relacion name="" id="">
-    </td>
-  </ng-container>
-  <tr>
-    <td>
-      <input type="button" value="Agregar Aval" (click)="addAval()">
-    </td>
-  </tr>
-</table>
-<br/>
-
-<input type="button" value="Guardar Grupo" (click)="Guardar()">
+<input type="button" value="Agregar Prueba" (click)="AgregarPrueba(Grilla)">

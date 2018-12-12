@@ -19,13 +19,27 @@ import { FormsModule } from '../../node_modules/@angular/forms';
 // Importar HttpClientModule
 import {HttpClientModule} from '@angular/common/http';
 
+//Grillas
+import { AgGridModule } from 'ag-grid-angular';
+
+
+//Editor Numerico Grilla
+import { NumericEditorComponent } from './functiones/numeric-editor.component';
+import { CheckboxCellComponent } from './functiones/checkbox-cell.component';
+import { NumberEditorComponent } from './functiones/number-editor.component';
+
+
 
 @NgModule({
   declarations: [
     AppComponent,
     GrupoComponent,
     BienvenidaComponent,
-    PendientesComponent
+    PendientesComponent,
+    NumericEditorComponent,
+    CheckboxCellComponent,
+    NumberEditorComponent,
+    
   ],
   imports: [
     //General
@@ -36,6 +50,9 @@ import {HttpClientModule} from '@angular/common/http';
     NgbModule, NgbPaginationModule, NgbAlertModule,
     //HTTP Cliente
     HttpClientModule,
+    //Grillas
+    AgGridModule.withComponents([NumericEditorComponent, CheckboxCellComponent, NumberEditorComponent])
+
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -1,9 +1,23 @@
 /* You can add global styles to this file, and also import other style files */
 @import '~bootstrap/dist/css/bootstrap.min.css';
 
+//Grillas
+@import 'ag-grid-community/dist/styles/ag-grid.css';
+@import 'ag-grid-community/dist/styles/ag-theme-balham.css';
+
 .Error{
     background-color: firebrick;
 }
 
 
 
+
+.default {
+    border: 1px solid transparent !important;
+    padding: 4px;
+}
+
+.selected {
+    border: 1px solid lightgreen !important;
+    padding: 4px;
+}

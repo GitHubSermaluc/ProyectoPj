@@ -11,12 +11,20 @@ import { GlobalsService } from '../../functiones/globals.service';
 //Route
 import { Router } from '../../../../node_modules/@angular/router';
 
-
 //Servicio de Grupo JsonPantalla
 import { JsonPantallaGrupoService } from '../../functiones/json-pantalla-grupo.service';
 
 //Http Cliente para consumo de los Apis
 import {HttpClient, HttpHeaders} from '@angular/common/http';
+
+//Componente para campos numericos de la grilla
+import { NumericEditorComponent } from 'src/app/functiones/numeric-editor.component';
+import { CheckboxCellComponent } from 'src/app/functiones/checkbox-cell.component';
+import { NumberEditorComponent } from 'src/app/functiones/number-editor.component';
+import { isNumber } from 'util';
+
+
+
 
 @Component({
   selector: 'app-grupo',
@@ -32,88 +40,22 @@ export class GrupoComponent implements OnInit {
   //Template PopUp Empresa confirmada (con y sin error)
   @ViewChild('empresaconfirmada') empresaconfirmada: TemplateRef<any>;
 
+  //Json que controla toda la pantalla
+  JsonPantallaGrupo = {};
 
   closeResult: string;
 
   //Datos de la Empresa
   RutCliente: string = "";
-  NombreEmpresa: string = "";
-  SegmentoRiesgoCliente: string = "";
-  TipoCliente: string = "";
-  SegmentoEconomico: string = "";
-
+  
   //Ventanas Popup
   VentanaRut: any;
   VentanaSafe: any;
 
-  //Resultado de Consulta Safe
-  consultaSafe: boolean = false;
-
-  //Marca para agregar un socio
-  AgregaSocio: boolean = false;
-  AgregaSocioEmpresa: string = "";
-  AgregaAval: boolean = false;
-  AgregaDireccion: boolean = false;
-
-  //Marca para agregar empresas relacionadas
-  AgregaRelacionado: boolean = false;
+  consultaSafe = true;
 
   //Tablon de Parametros
   Tipos_Clientes: any = [];
-
-  JsonPantallaServices: JsonPantallaGrupoService = new JsonPantallaGrupoService();
-
-  /**
-   * Json de toda la pantalla
-   * El objetivo es tener un solo origen de datos para toda la pantalla, la cual servirá de JsonPantalla en base de datos
-   * para la consulta de edición
-   * Ver como sincronizar los ID al momento de insertar (inicialmente) o insertar al momento de la edicion
-  */
-  /*
-   JsonPantalla: any = {
-     "NumeroSolicitud":"",
-     "Estado":"",
-     "RutCliente":"",
-     "RazonSocial":"",
-     "SegmentoRiesgo":"",
-     "Relacionados":[
-           {
-             "Id_Empresa":"",
-             "Seleccion":"",
-             "Estado":"",
-             "RutEmpresa":"",
-             "TipoRelacion":"",
-             "RazonSocialEmpresa":"",
-             "PorcentajeParticipacion":"",
-             "Socios":[
-               {
-                 "Id_Socio":"",
-                 "Seleccion":"",
-                 "Estado":"",
-                 "RutSocio":"",
-                 "NombreSocio":""
-               }
-             ]
-           }
-         ],
-     "Avales":[
-       {
-         "Id_Aval":"",
-         "Estado":"",
-         "RutSolicitante":"",
-         "NombreSolicitante":"",
-         "RutAval":"",
-         "NombreAval":"",
-         "RelacionSolicitante":""
-       }
-     ]
-   } ;
-   */
-
-  MuestraJson(txtJson) {
-    console.log(JSON.stringify(this.JsonPantallaServices.JsonPantalla[0]));
-    txtJson.value = JSON.stringify(this.JsonPantallaServices.JsonPantalla[0]);
-  }
 
   constructor(public http: HttpClient, private router: Router, private globals: GlobalsService, config: NgbModalConfig, private modalService: NgbModal) {
     config.backdrop = 'static';
@@ -121,14 +63,6 @@ export class GrupoComponent implements OnInit {
   }
 
   ngAfterViewInit() {
-    //Aca cargar los datos de Tablon de parametros para el tipo de cliente
-    //DUMMY
-    this.Tipos_Clientes.push({ "value": "1", "textview": "Pymne" });
-    this.Tipos_Clientes.push({ "value": "2", "textview": "EEMM" });
-    this.Tipos_Clientes.push({ "value": "3", "textview": "otro" });
-
-    //Verificar si es una nueva solicitud o es una solicitud previamente creada
-    //Solicitud Nueva DUMMY
     setTimeout(() => this.openPopup());
   }
 
@@ -143,7 +77,7 @@ export class GrupoComponent implements OnInit {
           return;
         }
         this.RutCliente = this.globals.formatRut(this.RutCliente);
-        this.ConsultaCliente();
+        this.IniciaPantallaGrupo();
       }
     }, (reason) => {
       this.router.navigate(['/bienvenida']);
@@ -155,51 +89,43 @@ export class GrupoComponent implements OnInit {
     this.VentanaRut.close('Cancelar');
   }
 
-  //Consulta servicio de clientes CORE
-  ConsultaCliente() {
-    //Llamada a Consulta clientes CORE
-    //LLAMADA DUMMY
-    //let params = {"Rut":"139261313"};
-    let params = "";
+  //Consulta API para obtener los datos del cliente, safe, segmento de riesgo, 
+  IniciaPantallaGrupo() {
+
     let headers = new HttpHeaders().set('Content-Type','application/x-www-form-urlencoded');
-    this.http.get("http://192.168.8.102:8080/api/Parametros/0/0/2", {headers: headers}).subscribe(result =>
+    var RutSinFormato = this.globals.unFormatRut(this.RutCliente);
+
+    this.http.get(this.globals.RutaRest + "/Grupo/0/" + RutSinFormato , {headers: headers}).subscribe(result =>
       {
+        console.log( this.JsonPantallaGrupo);
+
+        this.JsonPantallaGrupo = result;
         console.log(result);
-        alert("OK");
+       
+        this.MuestraVentanaSafe();
       }
     );
-    //LLAMADA DUMMY
-
-    //DATOS DUMMY...!!!!!
-    this.NombreEmpresa = "Nombre Empresa de Pruebas";
-    this.SegmentoEconomico = "Valor Segmento Economico";
-    //DATOS DUMMY...!!!!!
-
-    this.ConsultaMallaSocietaria()
   }
 
   //Popup Consulta servicio de Safe
-  ConsultaMallaSocietaria() {
-    //Llamada a Safe para obtener Malla Societaria
-    //LLAMADA PENDIENTE..!!!!!!
-    this.consultaSafe = true;
-    //DUMMY DE DATOS DE SAFE...!!!
-    this.NombreEmpresa = "Nombre Empresa de Pruebas";
-    //Aca se deben cargar los socios y empresas de la malla societaria
-    //DUMMY DE DATOS DE SAFE...!!!
+  MuestraVentanaSafe() {
+    
     this.VentanaSafe = this.modalService.open(this.empresaconfirmada);
 
     this.VentanaSafe.result.then((result) => {
-
+      
     }, (reason) => {
+     
       this.router.navigate(['/bienvenida']);
     });
 
   }
+  
   //Popup Consulta servicio de Safe
   cerrarTemplateSafe() {
     this.router.navigate(['/bienvenida']);
     this.VentanaSafe.close('Cancelar');
+    
   }
 
   ngOnInit() {
@@ -208,11 +134,22 @@ export class GrupoComponent implements OnInit {
 
   //OK con las llamadas
   Continuar() {
+    
     this.VentanaSafe.close("Continuar");
-    this.JsonPantallaServices.inicializaJson("0", "I", this.RutCliente, this.NombreEmpresa, this.SegmentoRiesgoCliente, this.TipoCliente, this.SegmentoEconomico);
-    alert(this.JsonPantallaServices.JsonPantalla);
-  }
+    let headers = new HttpHeaders().set('Content-Type','application/x-www-form-urlencoded');
+    
+    this.http.get(this.globals.RutaRest + "/Parametros/1/0/1", {headers: headers}).subscribe(result =>
+      {
+        console.log( this.JsonPantallaGrupo);
+        this.Tipos_Clientes = result;
+        console.log(result);
+      }
+    );
 
+
+    
+  }
+/*
   addSocioPrincipal() {
     this.AgregaSocio = true;
   }
@@ -398,4 +335,61 @@ export class GrupoComponent implements OnInit {
       }
     }
     */
+
+   MuestraJson(txtJson) {
+    console.log(this.JsonPantallaGrupo);
+    txtJson.value = JSON.stringify(this.JsonPantallaGrupo);
+  }
+
+  public onChangeGrid(event) {
+    console.log(event);
+    //params.data[params.colDef.field] = event.currentTarget.checked;
+  }
+
+  ColumnsSociosPrincipal = [
+    { headerName: 'NumeroSolicitud', field: 'NumeroSolicitud', hide: true},
+    { headerName: 'RelacionadoId', field: 'RelacionadoId', hide: true},
+    { headerName: 'Seleccionar', field: 'Participacion', width: 80, cellRendererFramework: CheckboxCellComponent },
+    { headerName: 'Socio', field: 'Nombre', width: 250 },
+    { headerName: 'Rut', field: 'RelacionadoRut' },
+    { headerName: 'CodigoTipoRelacion', field: 'CodigoTipoRelacion', hide: true },
+    { headerName: 'Porcentaje', field: 'PorcentajeParticipacion', width: 80, editable:true, valueParser: this.ValidaNumero  },
+    { headerName: 'RelacionadoIdPadre', field: 'RelacionadoIdPadre', hide: true },
+    { headerName: 'CodigoSegmentoNegocio', field: 'CodigoSegmentoNegocio', hide: true },
+    { headerName: 'CodigoSegmentoRiesgo', field: 'CodigoSegmentoRiesgo', hide: true },
+    { headerName: 'Editando', field: 'Editando', hide: true },
+    { headerName: 'Eliminado', field: 'Eliminado', hide: true },
+    { headerName: 'Error', field: 'Error', hide: true },
+    { headerName: 'Estado', field: 'Estado', hide: true },
+    { headerName: 'PersonaPoliticamenteExpuesta', field: 'PersonaPoliticamenteExpuesta', hide: true }
+    
+  ]
+
+  ValidaNumero(params){
+      console.log(params);  
+      var Valor = Number(params.newValue).toString();
+      if (Valor == 'NaN'){
+        params.data[params.colDef.field] = 0;
+        alert("El valor ingresado no es un número");
+      }
+      else
+      {
+        return Valor;
+      }
+  }
+
+  /* 
+
+  rowData = [
+      {make: 'Toyota', model: 'Celica', price: 35000},
+      {make: 'Ford', model: 'Mondeo', price: 32000},
+      {make: 'Porsche', model: 'Boxter', price: 72000 }
+  ];
+
+  AgregarPrueba(Grilla){
+    this.rowData.push({make: '', model: '', price: 0});
+    Grilla.api.setRowData(this.rowData);
+    console.log(this.rowData);
+  }
+  */
 }

@@ -7,6 +7,8 @@ import chileanRut from 'chilean-rut'
 })
 export class GlobalsService {
 
+  RutaRest = "http://192.168.8.105:8080/api";
+
   constructor() {
     
   }
